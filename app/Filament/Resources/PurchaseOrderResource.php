@@ -19,9 +19,24 @@ class PurchaseOrderResource extends Resource
 
     protected static ?string $modelLabel = 'Purchase Order (PO)';
     protected static ?string $pluralModelLabel = 'Daftar Purchase Order (PO)';
-    protected static ?string $navigationGroup = 'Quotation Pipeline';
-    protected static ?string $navigationIcon = 'heroicon-o-clipboard-document-check';
+    protected static ?string $navigationGroup = 'Pipeline & Penawaran';
+    protected static ?string $navigationIcon = 'heroicon-o-shopping-bag';
     protected static ?int $navigationSort = 2;
+
+    public static function getNavigationBadge(): ?string
+    {
+        return (string) static::getModel()::where('delivery_status', 'PENDING')->count();
+    }
+
+    public static function getNavigationBadgeColor(): ?string
+    {
+        return 'info';
+    }
+
+    public static function getNavigationBadgeTooltip(): ?string
+    {
+        return 'PO menunggu pengiriman';
+    }
 
     public static function form(Form $form): Form
     {

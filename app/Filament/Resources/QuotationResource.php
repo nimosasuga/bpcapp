@@ -29,9 +29,24 @@ class QuotationResource extends Resource
 
     protected static ?string $modelLabel = 'Penawaran Harga (Quote)';
     protected static ?string $pluralModelLabel = 'Daftar Penawaran (Quotations)';
-    protected static ?string $navigationGroup = 'Quotation Pipeline';
+    protected static ?string $navigationGroup = 'Pipeline & Penawaran';
     protected static ?string $navigationIcon = 'heroicon-o-document-currency-dollar';
     protected static ?int $navigationSort = 1;
+
+    public static function getNavigationBadge(): ?string
+    {
+        return (string) static::getModel()::whereIn('status', ['SENT', 'FOLLOW_UP'])->count();
+    }
+
+    public static function getNavigationBadgeColor(): ?string
+    {
+        return 'warning';
+    }
+
+    public static function getNavigationBadgeTooltip(): ?string
+    {
+        return 'Jumlah penawaran aktif yang sedang berjalan';
+    }
 
     public static function form(Form $form): Form
     {

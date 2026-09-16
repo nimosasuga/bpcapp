@@ -7,16 +7,20 @@ use Filament\Widgets\ChartWidget;
 
 class WinLoseCategoryChart extends ChartWidget
 {
-    protected static ?string $heading = 'Analisis Rasio Win vs Lose per Kategori Part';
-    protected static ?int $sort = 2;
+    protected static ?string $heading = 'Evaluasi Menang vs Kalah per Kategori';
+    protected static ?int $sort = 7;
+    protected int | string | array $columnSpan = [
+        'default' => 'full',
+        'lg' => 1,
+    ];
 
     protected function getData(): array
     {
         $categories = [
-            'SPAREPART_JUNGHEINRICH' => 'Sparepart Jungheinrich',
+            'SPAREPART_JUNGHEINRICH' => 'Jungheinrich',
             'TYRE_FORKLIFT' => 'Tyre Forklift',
-            'TYRE_TRUCK_TIRON' => 'Ban Truk Tiron',
-            'MIXED' => 'Mixed / Campuran',
+            'TYRE_TRUCK_TIRON' => 'Ban Tiron',
+            'MIXED' => 'Campuran',
         ];
 
         $winData = [];
@@ -32,16 +36,18 @@ class WinLoseCategoryChart extends ChartWidget
         return [
             'datasets' => [
                 [
-                    'label' => 'Menang (WIN / PO)',
+                    'label' => 'Menang (PO)',
                     'data' => $winData,
-                    'backgroundColor' => 'rgba(16, 185, 129, 0.8)',
+                    'backgroundColor' => 'rgba(16, 185, 129, 0.85)',
                     'borderColor' => 'rgb(16, 185, 129)',
+                    'borderRadius' => 6,
                 ],
                 [
                     'label' => 'Kalah (LOSE)',
                     'data' => $loseData,
-                    'backgroundColor' => 'rgba(239, 68, 68, 0.8)',
+                    'backgroundColor' => 'rgba(239, 68, 68, 0.85)',
                     'borderColor' => 'rgb(239, 68, 68)',
+                    'borderRadius' => 6,
                 ],
             ],
             'labels' => $labels,

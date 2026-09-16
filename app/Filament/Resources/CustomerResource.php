@@ -21,9 +21,24 @@ class CustomerResource extends Resource
 
     protected static ?string $modelLabel = 'Pelanggan / PT';
     protected static ?string $pluralModelLabel = 'Data Pelanggan (PT)';
-    protected static ?string $navigationGroup = 'CRM & Pelanggan';
+    protected static ?string $navigationGroup = 'Data Pelanggan';
     protected static ?string $navigationIcon = 'heroicon-o-building-office-2';
     protected static ?int $navigationSort = 1;
+
+    public static function getNavigationBadge(): ?string
+    {
+        return (string) static::getModel()::count();
+    }
+
+    public static function getNavigationBadgeColor(): ?string
+    {
+        return 'gray';
+    }
+
+    public static function getNavigationBadgeTooltip(): ?string
+    {
+        return 'Total perusahaan pelanggan terdaftar';
+    }
 
     public static function form(Form $form): Form
     {
