@@ -247,6 +247,32 @@ erDiagram
 - Pengarsipan otomatis ke Google Drive: `PART CONSULTANTS / {NAMA_PT} / {TAHUN} / PO / PO_{Nomor_PO}.pdf`.
 - Pelacakan status pengiriman (*Pending, Partial, Delivered, Completed*), tanggal target kirim, dan nomor surat jalan/faktur.
 
+### Modul 7: Dashboard Eksekutif Sales Part Consultant (Modern & Terpersonalisasi)
+Dashboard dirancang khusus sebagai *Command Center* harian Sales Part Consultant PT Kobexindo Equipment:
+1. **Sales Greeting Hero Banner (`SalesHeroBannerWidget`)**:
+   - Sapaan cerdas dinamis sesuai jam (Pagi/Siang/Sore/Malam), nama sales, dan tanggal Indonesia.
+   - Indikator ringkasan live: Total Pipeline Aktif, Total Revenue PO Won, dan Peringatan Quote H-3.
+   - Tombol Aksi Cepat: `⚡ Import PDF Epicor`, `Buat Manual`, `Customer 360`, dan `Lacak PO`.
+2. **Statistik KPI dengan Sparkline Charts (`QuotationStatsOverview`)**:
+   - 4 Kartu KPI eksekutif dengan grafik mini sparkline tren 7 periode:
+     - *Pipeline Penawaran Aktif (Rp & Jumlah Quote)*
+     - *Closing PO Masuk / WIN (Rp & Jumlah Deal)*
+     - *Tingkat Konversi / Win Rate (% Rasio)*
+     - *Perlu Tindak Lanjut / Urgent (Masa berlaku H-3)*
+3. **Tren Performa Pipeline vs PO (`MonthlyPipelinePerformanceChart`)**:
+   - Multi-line chart membandingkan nilai penawaran keluar vs realisasi PO masuk 6 bulan terakhir.
+4. **Distribusi Portofolio Part (`PortfolioDistributionChart`)**:
+   - Doughnut chart pembagian portofolio: Jungheinrich, Tyre Forklift, Ban Truk Tiron, dan Mixed.
+5. **Prioritas Follow-Up H-3 & Expired (`ExpiringQuotationsWidget`)**:
+   - Tabel prioritas mendesak dengan aksi 1-klik: *Template Email / Thunderbird*, *Tandai WIN (PO)*, *Tandai LOSE*, dan *Buka Detail*.
+6. **Realisasi Order & Pelacakan Pengiriman (`RecentPurchaseOrdersWidget`)**:
+   - Tabel 5 PO customer terbaru dengan badge status pengiriman (*Menunggu Pengiriman, Kirim Sebagian, Terkirim Lengkap, Selesai*).
+7. **Evaluasi Rasio Menang vs Kalah (`WinLoseCategoryChart`)**:
+   - Bar chart komparasi WIN vs LOSE per kategori portofolio.
+8. **Personalisasi Identitas & Tampilan Panel**:
+   - Brand logo kubus emas Kobexindo + subtitle PT Kobexindo Equipment.
+   - Font modern `Plus Jakarta Sans`, mode SPA (*Single Page Application*) untuk transisi instan tanpa reload, dan navigation badges dinamis pada sidebar.
+
 ---
 
 ## 6. Kredensial Akun Default
