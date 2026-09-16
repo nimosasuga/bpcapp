@@ -41,7 +41,8 @@ class QuotationResource extends Resource
                     ->description('Tarik & letakkan file PDF hasil export dari ERP Epicor untuk ekstraksi instan data penawaran.')
                     ->schema([
                         Forms\Components\FileUpload::make('pdf_upload')
-                            ->label('Upload File PDF Penawaran Epicor')
+                            ->label('Unggah Berkas PDF Epicor (Semua Form Terisi Otomatis)')
+                            ->helperText('Tarik file PDF penawaran Epicor ke sini. Nomor, Customer, Tanggal, Masa Berlaku, Part Items, dan Harga akan otomatis terisi seketika.')
                             ->acceptedFileTypes(['application/pdf'])
                             ->disk('public')
                             ->directory('temp_uploads')
@@ -50,56 +51,123 @@ class QuotationResource extends Resource
                                 if (!$state) {
                                     return;
                                 }
+
                                 try {
-                                    $filePath = Storage::disk('public')->path($state);
+                                    $filePath = null;
+                                    if ($state instanceof \Livewire\Features\SupportFileUploads\TemporaryUploadedFile) {
+                                        $filePath = $state->getRealPath();
+                                    } elseif (is_array($state) && count($state) > 0) {
+                                        $first = reset($state);
+                                        if ($first instanceof \Livewire\Features\SupportFileUploads\TemporaryUploadedFile) {
+                                            $filePath = $first->getRealPath();
+                                        } elseif (is_string($first)) {
+                                            $filePath = Storage::disk('public')->path($first);
+                                        }
+                                    } elseif (is_string($state)) {
+                                        if (Storage::disk('public')->exists($state)) {
+                                            $filePath = Storage::disk('public')->path($state);
+                                        } else {
+                                            $filePath = storage_path('app/' . $state);
+                                        }
+                                    }
+
+                                    if (!$filePath || !file_exists($filePath)) {
+                                        return;
+                                    }
+
                                     $parser = app(EpicorPdfParserService::class);
                                     $extracted = $parser->parsePdf($filePath);
 
                                     if ($extracted['success']) {
+                                        // 1. Auto-fill Quotation Number
                                         if (!empty($extracted['quotation_number'])) {
                                             $set('quotation_number', $extracted['quotation_number']);
                                         }
+
+                                        // 2. Auto-fill Dates
                                         if (!empty($extracted['quotation_date'])) {
                                             $set('quotation_date', $extracted['quotation_date']);
                                         }
                                         if (!empty($extracted['valid_until'])) {
                                             $set('valid_until', $extracted['valid_until']);
                                         }
+
+                                        // 3. Auto-fill Terms & Lead Time
+                                        if (!empty($extracted['payment_terms'])) {
+                                            $set('payment_terms', $extracted['payment_terms']);
+                                        }
+                                        if (!empty($extracted['lead_time'])) {
+                                            $set('lead_time', $extracted['lead_time']);
+                                        }
+
+                                        // 4. Auto-fill Customer & Contact
+                                        if (!empty($extracted['customer_name'])) {
+                                            $customer = Customer::firstOrCreate([
+                                                'company_name' => $extracted['customer_name'],
+                                            ], [
+                                                'branch_area' => 'Cikarang',
+                                                'customer_type' => 'NEW_CUSTOMER',
+                                                'address' => $extracted['customer_address'] ?? null,
+                                            ]);
+
+                                            // Update address if was null
+                                            if (!empty($extracted['customer_address']) && empty($customer->address)) {
+                                                $customer->update(['address' => $extracted['customer_address']]);
+                                            }
+
+                                            $set('customer_id', $customer->id);
+
+                                            $contactName = $extracted['contact_name'] ?: ($extracted['sales_person'] ? 'Purchasing PIC' : 'PIC Bagian Pengadaan');
+                                            $contact = CustomerContact::firstOrCreate([
+                                                'customer_id' => $customer->id,
+                                                'name' => $contactName,
+                                            ], [
+                                                'position' => 'Purchasing / Maintenance',
+                                                'phone_number' => $extracted['customer_phone'] ?? null,
+                                                'is_primary' => true,
+                                            ]);
+
+                                            if (!empty($extracted['customer_phone']) && empty($contact->phone_number)) {
+                                                $contact->update(['phone_number' => $extracted['customer_phone']]);
+                                            }
+
+                                            $set('contact_id', $contact->id);
+                                        }
+
+                                        // 5. Auto-fill Items Repeater!
+                                        if (!empty($extracted['items'])) {
+                                            $formattedItems = [];
+                                            foreach ($extracted['items'] as $item) {
+                                                $formattedItems[\Illuminate\Support\Str::uuid()->toString()] = $item;
+                                            }
+                                            $set('items', $formattedItems);
+                                        }
+
+                                        // 6. Auto-fill Totals & Category
                                         if (!empty($extracted['total_amount'])) {
                                             $set('total_amount', $extracted['total_amount']);
                                         }
-                                        if (!empty($extracted['customer_name'])) {
-                                            $customer = Customer::where('company_name', 'like', '%' . $extracted['customer_name'] . '%')->first();
-                                            if (!$customer) {
-                                                $customer = Customer::create([
-                                                    'company_name' => $extracted['customer_name'],
-                                                    'customer_type' => 'NEW_CUSTOMER',
-                                                ]);
-                                            }
-                                            $set('customer_id', $customer->id);
-
-                                            if (!empty($extracted['contact_name'])) {
-                                                $contact = CustomerContact::firstOrCreate([
-                                                    'customer_id' => $customer->id,
-                                                    'name' => $extracted['contact_name'],
-                                                ], [
-                                                    'position' => 'Purchasing',
-                                                    'is_primary' => true,
-                                                ]);
-                                                $set('contact_id', $contact->id);
-                                            }
+                                        if (!empty($extracted['currency'])) {
+                                            $set('currency', $extracted['currency']);
                                         }
-                                        $set('pdf_file_path', $state);
+                                        if (!empty($extracted['category'])) {
+                                            $set('category', $extracted['category']);
+                                        }
 
+                                        $set('status', 'SENT');
+                                        $set('pdf_file_path', is_string($state) ? $state : null);
+
+                                        $itemCount = count($extracted['items']);
                                         Notification::make()
-                                            ->title('PDF Epicor Berhasil Diekstrak!')
-                                            ->body("No: {$extracted['quotation_number']} | Nilai: Rp " . number_format($extracted['total_amount'], 0, ',', '.'))
+                                            ->title('Ekstraksi PDF Epicor Berhasil (Otomatis Terisi)!')
+                                            ->body("No Quote: {$extracted['quotation_number']} | Customer: {$extracted['customer_name']} | {$itemCount} item part | Total: Rp " . number_format($extracted['total_amount'], 0, ',', '.'))
                                             ->success()
+                                            ->duration(8000)
                                             ->send();
                                     }
                                 } catch (\Throwable $e) {
                                     Notification::make()
-                                        ->title('Gagal Membaca PDF')
+                                        ->title('Gagal Membaca PDF Epicor')
                                         ->body($e->getMessage())
                                         ->danger()
                                         ->send();
