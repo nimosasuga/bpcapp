@@ -153,15 +153,28 @@ erDiagram
 
 ## 5. Rincian Modul & Fungsionalitas Sistem
 
-### Modul 1: Manajemen Quotation & Ekstraksi PDF Epicor
-- **File Upload**: Mendukung drag & drop file PDF penawaran hasil export ERP Epicor.
-- **Ekstraksi Teks Cerdas (`smalot/pdfparser`)**:
-  - Otomatis mendeteksi Nomor Penawaran, Tanggal, Masa Berlaku, Nama PT Customer, PIC Attn, dan Total Nilai (DPP + PPN).
-  - Otomatis mencocokkan atau membuat data pelanggan baru jika belum ada di database.
+### Modul 1: Manajemen Quotation & Ekstraksi PDF Epicor (Zero-Typing)
+- **1-Click Import Modal (Tanpa Ketik)**:
+  - Tombol **⚡ Import PDF Epicor (Otomatis)** pada daftar penawaran (`ListQuotations`).
+  - Sales Consultant hanya perlu memilih atau men-drag file PDF penawaran hasil export Epicor Kobexindo.
+  - Sistem mengekstrak seluruh data secara otomatis, membuat Customer, PIC Contact, Quotation, dan baris item part di database, lalu mengarahkan ke halaman review/edit.
+- **Form Auto-Fill via Livewire**:
+  - Pada halaman **Buat Penawaran**, upload PDF pada field `Upload PDF Penawaran Epicor` seketika mengisi seluruh input form dan repeater rincian item.
+- **Spesifikasi Ekstraksi Cerdas (`EpicorPdfParserService`)**:
+  - **Nomor Quote**: Mendeteksi pola nomor penawaran Epicor (contoh: `36047 Quote Num :`).
+  - **Tanggal & Validity**: Mengekstrak `Quote Date` dan `Quote Expired` (contoh: `9/16/2026` dan `10/1/2026`).
+  - **Pelanggan & PIC**: Mendeteksi nama PT (contoh: `PT. HERSO TICEP INDONESIA`), alamat lengkap, dan nomor kontak/telepon (contoh: `081911121991`).
+  - **Sales Consultant**: Mendeteksi nama sales pada *Authorized Signature* (contoh: `Ilham Firyanto`).
+  - **Syarat Pembayaran**: Mendeteksi kode `N2` menjadi `Net 30 Hari`, `N1` menjadi `Net 14 Hari`, `CBD` menjadi `Cash Before Delivery`.
+  - **Lead Time**: Mendeteksi kata `INDENT` menjadi `Indent 4-6 Minggu`, atau `READY STOCK`.
+  - **Tabel Rincian Part**: Mengekstrak Part Number (contoh `50421067`), Deskripsi (`On-board computer`), Qty, Satuan (`Pcs`), Harga Satuan (`Rp 281.110.000`), Diskon (`5%`), dan Total Harga (`Rp 267.054.500`).
+  - **Nilai Total & PPN**: Mengekstrak Sub Total DPP, PPN 11%, dan GrandTotal (`Rp 296.430.495`).
 - **Google Drive Archival**:
   - Menyimpan berkas ke struktur folder: `PART CONSULTANTS / {NAMA_PT} / {TAHUN} / Quotation_{Nomor_Quote}.pdf`.
   - Otomatis mencatat `drive_folder_id` di database.
   - Dilengkapi *graceful fallback* ke storage lokal jika kredensial belum dikonfigurasi.
+- **Google Calendar Reminder**:
+  - Otomatis membuat event pengingat tindak lanjut H-3 sebelum `valid_until` berakhir.
 
 ### Modul 2: Generator Template Email Thunderbird
 - **Aksi Cepat Sekali Klik**:
